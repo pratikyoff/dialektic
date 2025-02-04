@@ -22,7 +22,7 @@ Words Used: <translation of every word used in the original message along with a
 Example 1:
 
 > Original sentence: I want to learn German.
-German: Ich möchte Deutsch lernen.
+German: \`Ich möchte Deutsch lernen.\`
 Literal English: I want German to learn.
 
 Words Used:
@@ -37,7 +37,7 @@ Example 2:
 
 > Original sentence: Ich habe ein Buch gelesen.
 Literal English: I have a book read.
-Translated English: I read a book.
+Translated English: \`I read a book.\`
 
 Words Used:
 - \`Ich\` - "I", personal pronoun, nominative case.
