@@ -2,10 +2,10 @@ const { Router } = require('express')
 
 const discordRouter = Router()
 
-// Discord PING
-// -H "Content-Type: application/json" -d '{"type": 0}'
 discordRouter.post('/', (req, res) => {
-    if (req.body.type === 0) res.status(204).json()
+    res.status(204)
+    res.set('Content-Type', 'application/json')
+    res.end()
 })
 
 module.exports = { discordRouter }

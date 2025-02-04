@@ -9,7 +9,7 @@ discordVerificationRouter.use((req, res, next) => {
     try {
         const signature = req.get('X-Signature-Ed25519')
         const timestamp = req.get('X-Signature-Timestamp')
-        const body = req.body ? JSON.stringify(req.body) : undefined
+        const body = req.rawBodyString
 
         const isVerified = nacl.sign.detached.verify(
             Buffer.from(timestamp + body),
@@ -20,6 +20,7 @@ discordVerificationRouter.use((req, res, next) => {
         if (!isVerified) {
             return res.status(401).end('invalid request signature')
         }
+        next()
     } catch (error) {
         return res.status(401).end('invalid request signature')
     }
