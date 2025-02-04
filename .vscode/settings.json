@@ -1,0 +1,10 @@
+{
+    "eslint.validate": ["javascript"],
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "cSpell.words": [
+        "dialektic",
+        "nacl"
+    ]
+}
