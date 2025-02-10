@@ -3,7 +3,8 @@ const { OpenAI } = require('openai')
 
 const aiTestChannelId = '1336328716468621383'
 const aiAssistedChatChannelId = '1336328183678763019'
-const allowedChannels = [aiTestChannelId, aiAssistedChatChannelId]
+const fwfAiAssistedChatChannelId = '1338306843075805185'
+const allowedChannels = [aiTestChannelId, aiAssistedChatChannelId, fwfAiAssistedChatChannelId]
 
 const aiClient = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
 
@@ -12,7 +13,8 @@ You are an AI assistant helping beginners learn German. A user will provide a me
 
 > Original sentence: <original sentence>
 German<optional, only if original sentence has english>: <message in german>
-Literal English<required, literal english translation of the translated german message or the original german message>: <word by word translation in english, its ok if sentence does not make sense>
+Corrected German<optional, only if original sentence has german and is incorrect>: <corrected message in german>
+Literal English<required, literal english translation of the translated,original or correct german message>: <word by word translation in english, its ok if sentence does not make sense>
 Translated English<optional, only if message is completely in german>: <message in english>
 
 Words Used: <translation of every word used in the original message along with a brief grammar explanation of every word, enclosed in \`>
@@ -45,6 +47,23 @@ Words Used:
 - \`ein\` - "a", indefinite article, accusative case, matches singular neuter noun.
 - \`Buch\` - "book", noun, neuter gender.
 - \`gelesen\` - "read", past participle of "lesen" (to read).
+
+---
+
+Example 3:
+
+> Original sentence: Ich lernen Deutsch für zwei monets.
+German: \`Ich lerne Deutsch seit zwei Monaten.\`
+Literal English: I learn German since two months.
+Translated English: \`I have been learning German for two months.\`
+
+Words Used:
+- \`Ich\` - "I", personal pronoun, nominative case.
+- \`lerne\` - "learn", first-person singular form of "lernen" (to learn).
+- \`Deutsch\` - "German", proper noun.
+- \`seit\` - "since", preposition indicating a starting point in the past.
+- \`zwei\` - "two", number (plural form of "two").
+- \`Monaten\` - "months", dative plural form of "Monat" (month), used with "seit" to indicate a duration.
 `
 
 const processDiscordMessage = async (message) => {
@@ -63,7 +82,7 @@ const processDiscordMessage = async (message) => {
         model: 'gpt-4o',
         max_tokens: 1000
     })
-    console.log(chatCompletion)
+    console.log(JSON.stringify(chatCompletion))
 
     // send message to channel
     const answer = chatCompletion.choices[0].message.content
