@@ -1,11 +1,8 @@
-const { Message } = require('discord.js')
 const { OpenAI } = require('openai')
 const { sleepForMs } = require('../util/time')
+const { CHANNEL_ID } = require('../constants/channelIds')
 
-const aiTestChannelId = '1336328716468621383'
-const aiAssistedChatChannelId = '1336328183678763019'
-const fwfAiAssistedChatChannelId = '1338306843075805185'
-const allowedChannels = [aiTestChannelId, aiAssistedChatChannelId, fwfAiAssistedChatChannelId]
+const allowedChannels = [CHANNEL_ID.AI_TEST, CHANNEL_ID.AI_ASSISTED_CHAT, CHANNEL_ID.FWF_AI_ASSISTED_CHAT]
 
 const aiClient = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
 const maxResponseLength = 2000
