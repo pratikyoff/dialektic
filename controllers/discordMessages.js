@@ -1,4 +1,3 @@
-const { Message } = require('discord.js')
 const { OpenAI } = require('openai')
 const { sleepForMs } = require('../util/time')
 
