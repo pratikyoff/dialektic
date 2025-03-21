@@ -80,6 +80,9 @@ const sendMessageWithSpoiler = async (channel, content) => {
 }
 
 const processDiscordMessage = async (message) => {
+    // TODO: Remove this return when credits are added to ChatGPT
+    return
+
     // check if message is from allowed channel
     if (!allowedChannels.includes(message.channelId)) return
 
@@ -87,15 +90,21 @@ const processDiscordMessage = async (message) => {
     if (message.author.bot) return
 
     // translate message to German
-    const chatCompletion = await aiClient.chat.completions.create({
-        messages: [
-            { role: 'system', content: prompt },
-            { role: 'user', content: message.content }
-        ],
-        model: 'gpt-4o',
-        max_tokens: 1000
-    })
-    console.log(JSON.stringify(chatCompletion))
+    let chatCompletion
+    try {
+        chatCompletion = await aiClient.chat.completions.create({
+            messages: [
+                { role: 'system', content: prompt },
+                { role: 'user', content: message.content }
+            ],
+            model: 'gpt-4o',
+            max_tokens: 1000
+        })
+        console.log(JSON.stringify(chatCompletion))
+    } catch (error) {
+        console.error(error)
+        return
+    }
 
     // send message to channel
     const answer = chatCompletion.choices[0].message.content

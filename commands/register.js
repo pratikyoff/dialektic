@@ -1,14 +1,10 @@
 const { REST, Routes } = require('discord.js')
 const { checkGameChannel } = require('../middlewares/gameChannelCheck')
 const { startVocabVault, stopVocabVault } = require('./vocabVault')
+const { COMMAND_NAMES } = require('../constants/commandNames')
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID
-
-const COMMAND_NAMES = {
-    START_VOCAB_VAULT: 'start-vocab-vault',
-    STOP_VOCAB_VAULT: 'stop-vocab-vault'
-}
 
 const commandsInfo = [
     {
