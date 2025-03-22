@@ -1,8 +1,6 @@
 const LANGUAGE_CODE = {
     'en': 'English',
     'de': 'German'
-}
+} as const
 
-module.exports = {
-    LANGUAGE_CODE
-}
+export { LANGUAGE_CODE }

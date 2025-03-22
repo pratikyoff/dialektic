@@ -1,30 +1,31 @@
-const { COMMAND_NAMES } = require("../constants/commandNames")
-const { LANGUAGE_CODE } = require("../constants/languageCodes")
-const { vocabWords } = require("../store/vocabWords")
-const { sleepForMs } = require("../util/time")
+import type { Client, CommandInteraction, MessageCollector, SendableChannels } from 'discord.js'
+import { COMMAND_NAMES } from '../constants/commandNames.ts'
+import { LANGUAGE_CODE } from '../constants/languageCodes.ts'
+import { vocabWords } from '../store/vocabWords.ts'
+import { sleepForMs } from '../util/time.ts'
 
-const loopTimeSec = 45
+const loopTimeSec = 30
 
-let memory = []
-let scorePerUser = {}
-let gameInterval
-let messageCollector
-let currentGameChannelId
+const memory: (typeof vocabWords[0] & { translateTo: string })[] = []
+let scorePerUser: Record<string, number> = {}
+let gameInterval: NodeJS.Timeout | undefined
+let messageCollector: MessageCollector | null = null
+let currentGameChannelId: string | undefined
 let currentGameLoopCounter = 0
 
-const judgeLatestLoop = async (channel, client) => {
+const judgeLatestLoop = async (channel: SendableChannels, client: Client) => {
     const lastWordIndex = memory.length - 1
     const lastWord = memory[lastWordIndex]
     console.log('Judging latest loop, last word:', lastWord)
 
-    const collected = messageCollector.collected
-
-    if (collected.size === 0) {
+    if (!messageCollector || messageCollector.collected.size === 0) {
         console.log('No messages collected, ending game.')
         // end the game
         await stopGameInternal(channel, client)
         return true
     }
+
+    const collected = messageCollector.collected
 
     const lastMessagePerUser = {}
     for (const collectedMessage of collected.values()) {
@@ -32,7 +33,7 @@ const judgeLatestLoop = async (channel, client) => {
         lastMessagePerUser[userId] = collectedMessage
     }
 
-    const correctUserIds = []
+    const correctUserIds = [] as string[]
     for (const userId of Object.keys(lastMessagePerUser)) {
         const userMessage = lastMessagePerUser[userId]
         const userAnswer = userMessage.content.trim()
@@ -63,10 +64,12 @@ const judgeLatestLoop = async (channel, client) => {
         messageCollector.stop()
         messageCollector = null
     }
-}   
+}
 
-const generateNextWord = async (channel, client) => {
-    let allowedWords = vocabWords.filter(word => !memory.some(memWord => memWord.id === word.id))
+// eslint-disable-next-line no-unused-vars
+const generateNextWord = async (channel: SendableChannels, client: Client) => {
+    let allowedWords = vocabWords
+        .filter(word => !memory.some(memWord => memWord.id === word.id))
     if (allowedWords.length === 0) {
         // reset memory except the last word
         memory.splice(0, memory.length - 1)
@@ -97,10 +100,14 @@ const generateNextWord = async (channel, client) => {
     console.log('Message collector created for', loopTimeSec + 1, 'seconds')
 }
 
-const startVocabVault = async (interaction, client) => {
+const startVocabVault = async (interaction: CommandInteraction, client: Client) => {
     try {
-        await interaction.reply(`Starting vocab vault game shortly! You will be given a word to translate every 45 seconds. Type the translation in the chat to continue playing. Type \`${COMMAND_NAMES.STOP_VOCAB_VAULT}\` to stop the game.`)
-        const channel = await client.channels.fetch(interaction.channelId)
+        await interaction.reply(`Starting vocab vault game shortly! You will be given a word to translate every 30 seconds. Type the translation in the chat to continue playing. Type \`${COMMAND_NAMES.STOP_VOCAB_VAULT}\` to stop the game.`)
+        const channel = await client.channels.fetch(interaction.channelId) as SendableChannels
+        if (!channel) {
+            await interaction.followUp('An error occurred while starting the game. Please try again.')
+            return
+        }
 
         // sleep for sometime so that user can read the message
         await sleepForMs(10000)
@@ -124,7 +131,7 @@ const startVocabVault = async (interaction, client) => {
 }
 
 const judgeTotalGame = async () => {
-    const results = []
+    const results = [] as string[]
     if (Object.keys(scorePerUser).length === 0) {
         console.log('No scores to display at game end.')
         return 'No scores to display.'
@@ -147,7 +154,8 @@ const judgeTotalGame = async () => {
     return results.join('\n')
 }
 
-const stopGameInternal = async (channel, client) => {
+// eslint-disable-next-line no-unused-vars
+const stopGameInternal = async (channel: SendableChannels, client: Client) => {
     clearInterval(gameInterval)
     console.log('Game interval cleared, stopping game.')
 
@@ -156,7 +164,7 @@ const stopGameInternal = async (channel, client) => {
 
     // reset the game
     scorePerUser = {}
-    currentGameChannelId = null
+    currentGameChannelId = undefined
     currentGameLoopCounter = 0
     if (messageCollector) {
         console.log('Stopping and clearing message collector.')
@@ -165,7 +173,7 @@ const stopGameInternal = async (channel, client) => {
     }
 }
 
-const stopVocabVault = async (interaction, client) => {
+const stopVocabVault = async (interaction: CommandInteraction, client: Client) => {
     if (!currentGameChannelId) {
         await interaction.reply('No game in progress.')
         return
@@ -174,11 +182,11 @@ const stopVocabVault = async (interaction, client) => {
         await interaction.reply(`A game is ongoing in channel <#${currentGameChannelId}>. You can only stop the game in that channel.`)
         return
     }
-    const channel = await client.channels.fetch(interaction.channelId)
+    const channel = await client.channels.fetch(interaction.channelId) as SendableChannels
     await stopGameInternal(channel, client)
 }
 
-module.exports = {
+export {
     startVocabVault,
     stopVocabVault
 }

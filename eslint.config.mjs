@@ -1,14 +1,20 @@
-const js = require('@eslint/js')
+import typescript from '@typescript-eslint/eslint-plugin'
+import tsParser from '@typescript-eslint/parser'
 
-module.exports = [
+export default [
     {
+        files: ['**/*.ts', '**/*.tsx'],
         languageOptions: {
-            ecmaVersion: 'latest'
+            parser: tsParser,
+            ecmaVersion: 'latest',
+            sourceType: 'module'
+        },
+        plugins: {
+            '@typescript-eslint': typescript
         },
         rules: {
-            'no-undef': [''],
             'semi': ['error', 'never'],
-            'quotes': [2, 'single'],
+            'quotes': ['error', 'single'],
             'indent': ['error', 4],
             'no-unused-vars': ['error'],
             'eqeqeq': ['error'],

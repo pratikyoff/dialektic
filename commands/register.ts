@@ -1,10 +1,10 @@
-const { REST, Routes } = require('discord.js')
-const { checkGameChannel } = require('../middlewares/gameChannelCheck')
-const { startVocabVault, stopVocabVault } = require('./vocabVault')
-const { COMMAND_NAMES } = require('../constants/commandNames')
+import { Client, REST, Routes } from 'discord.js'
+import { checkGameChannel } from '../middlewares/gameChannelCheck.ts'
+import { startVocabVault, stopVocabVault } from './vocabVault.ts'
+import { COMMAND_NAMES } from '../constants/commandNames.ts'
 
-const TOKEN = process.env.DISCORD_BOT_TOKEN
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID
+const TOKEN = process.env.DISCORD_BOT_TOKEN || ''
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID || ''
 
 const commandsInfo = [
     {
@@ -22,7 +22,7 @@ const commandToFunctions = {
     [COMMAND_NAMES.STOP_VOCAB_VAULT]: checkGameChannel(stopVocabVault)
 }
 
-const registerCommands = async (client) => {
+const registerCommands = async (client: Client) => {
     const rest = new REST({ version: '10' }).setToken(TOKEN)
 
     try {
@@ -30,7 +30,7 @@ const registerCommands = async (client) => {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commandsInfo })
         console.log('Successfully reloaded application (/) commands.')
     } catch (error) {
-      console.error(error)
+        console.error(error)
     }
 
     client.on('interactionCreate', async (interaction) => {
@@ -47,6 +47,4 @@ const registerCommands = async (client) => {
     })
 }
 
-module.exports = {
-    registerCommands
-}
+export { registerCommands }
