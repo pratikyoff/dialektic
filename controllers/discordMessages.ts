@@ -1,13 +1,11 @@
-const { Message } = require('discord.js')
-const { OpenAI } = require('openai')
-const { sleepForMs } = require('../util/time')
+import { OpenAI } from 'openai'
+import { sleepForMs } from '../util/time.ts'
+import { CHANNEL_ID } from '../constants/channelIds.ts'
+import type { Message, SendableChannels } from 'discord.js'
 
-const aiTestChannelId = '1336328716468621383'
-const aiAssistedChatChannelId = '1336328183678763019'
-const fwfAiAssistedChatChannelId = '1338306843075805185'
-const allowedChannels = [aiTestChannelId, aiAssistedChatChannelId, fwfAiAssistedChatChannelId]
+const allowedChannels = [CHANNEL_ID.AI_TEST, CHANNEL_ID.AI_ASSISTED_CHAT, CHANNEL_ID.FWF_AI_ASSISTED_CHAT] as string[]
 
-const aiClient = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
+const aiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const maxResponseLength = 2000
 
 const prompt = `
@@ -73,7 +71,7 @@ Words Used:
 
 const spoilerTag = '||'
 
-const sendMessageWithSpoiler = async (channel, content) => {
+const sendMessageWithSpoiler = async (channel: SendableChannels, content: string) => {
     const spoilerContent = `${spoilerTag}${content}${spoilerTag}`
     try {
         await channel.send(spoilerContent)
@@ -82,7 +80,10 @@ const sendMessageWithSpoiler = async (channel, content) => {
     }
 }
 
-const processDiscordMessage = async (message) => {
+const processDiscordMessage = async (message: Message) => {
+    // TODO: Remove this return when credits are added to ChatGPT
+    return
+
     // check if message is from allowed channel
     if (!allowedChannels.includes(message.channelId)) return
 
@@ -90,22 +91,29 @@ const processDiscordMessage = async (message) => {
     if (message.author.bot) return
 
     // translate message to German
-    const chatCompletion = await aiClient.chat.completions.create({
-        messages: [
-            { role: 'system', content: prompt },
-            { role: 'user', content: message.content }
-        ],
-        model: 'gpt-4o',
-        max_tokens: 1000
-    })
-    console.log(JSON.stringify(chatCompletion))
+    let chatCompletion: OpenAI.Chat.Completions.ChatCompletion
+    try {
+        chatCompletion = await aiClient.chat.completions.create({
+            messages: [
+                { role: 'system', content: prompt },
+                { role: 'user', content: message.content }
+            ],
+            model: 'gpt-4o',
+            max_tokens: 1000
+        })
+        console.log(JSON.stringify(chatCompletion))
+    } catch (error) {
+        console.error(error)
+        return
+    }
 
     // send message to channel
-    const answer = chatCompletion.choices[0].message.content
+    const answer = chatCompletion.choices[0].message.content ?? ''
     const spoilerFree = `${spoilerTag}${answer}${spoilerTag}`
+    const channel = message.channel as SendableChannels
 
     if (spoilerFree.length <= maxResponseLength) {
-        await sendMessageWithSpoiler(message.channel, answer)
+        await sendMessageWithSpoiler(channel, answer)
         return
     }
 
@@ -114,8 +122,8 @@ const processDiscordMessage = async (message) => {
     let currentMessage = ''
     for (const line of splitAnswer) {
         if (currentMessage.length + '\n'.length + line.length + (2 * spoilerTag.length) > maxResponseLength) {
-            await sendMessageWithSpoiler(message.channel, currentMessage)
-            
+            await sendMessageWithSpoiler(channel, currentMessage)
+
             // sleep for 1 second to prevent rate limiting
             await sleepForMs(1000)
 
@@ -123,7 +131,7 @@ const processDiscordMessage = async (message) => {
         }
         currentMessage += line + '\n'
     }
-    if (currentMessage.length > 0) await sendMessageWithSpoiler(message.channel, currentMessage)
+    if (currentMessage.length > 0) await sendMessageWithSpoiler(channel, currentMessage)
 }
 
-module.exports = { processDiscordMessage }
+export { processDiscordMessage }
